@@ -63,14 +63,12 @@ MQTT::Client<MQTTNetwork, Countdown> *client_ptr;
 MQTTNetwork *mqttNetwork;
 
 InterruptIn btnRecord(USER_BUTTON);
-int16_t pDataXYZ[3] = {0};
 int idR[32] = {0};
 int indexR = 0;
 //InterruptIn btn3(SW3);
 volatile int message_num = 0;
 volatile int arrivedcount = 0;
 volatile bool closed = false;
-
 constexpr int kTensorArenaSize = 60 * 1024;
 uint8_t tensor_arena[kTensorArenaSize];
 const char* topic = "Mbed";
@@ -122,24 +120,15 @@ void close_mqtt() {
     closed = true;
 }
 
-
 void record(void) {
 
+   int16_t pDataXYZ[3] = {0};
    BSP_ACCELERO_AccGetXYZ(pDataXYZ);
 
    printf("%d, %d, %d\n", pDataXYZ[0], pDataXYZ[1], pDataXYZ[2]);
 
 }
 
-void stopRecord(void) {
-
-   printf("---stop---\n");
-
-   for (auto &i : idR)
-
-      queue.cancel(i);
-
-}
 
 void startRecord(void) {
 
@@ -152,28 +141,29 @@ void startRecord(void) {
 }
 
 
+void stopRecord(void) {
+
+   printf("---stop---\n");
+
+   for (auto &i : idR)
+
+      queue.cancel(i);
+
+}
+
 void GetACC(Arguments *in, Reply *out)
 {
-    float ang ;
     char buffer[200];
-    BSP_ACCELERO_Init();
-    
-    for(int i = 1; i<=10;)
-    {
-        led1 = 1;
-        BSP_ACCELERO_AccGetXYZ(pDataXYZ);
-        t.start(callback(&queue, &EventQueue::dispatch_forever));
-        btnRecord.fall(queue.event(startRecord));
-        btnRecord.rise(queue.event(stopRecord));
+   printf("Start accelerometer init\n");
 
-        printf("accelerometer data: %d, %d, %d \n", pDataXYZ[0], pDataXYZ[1], pDataXYZ[2]);
-        uLCD.locate(0, 0);
-        uLCD.color(BLUE);
-        uLCD.printf("00");
-        ThisThread::sleep_for(1000ms);
-    }
-    //queue.call(publish_message_2, i, ang);
-    printf("Back to RPC.");
+   BSP_ACCELERO_Init();
+
+   t.start(callback(&queue, &EventQueue::dispatch_forever));
+
+   btnRecord.fall(queue.event(startRecord));
+
+   btnRecord.rise(queue.event(stopRecord));
+
 }
 
 
