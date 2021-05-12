@@ -50,13 +50,11 @@ DigitalOut led3(LED3);
 DigitalIn mypin(USER_BUTTON);
 //Timeout flipper;//flipper.attach(&flip, 2s);
 ///////////////////////////////////
-void tilt(Arguments *in, Reply *out);
+void GetACC(Arguments *in, Reply *out);
 void gestureUIMode(Arguments *in, Reply *out);
 void AccCap(Arguments *in, Reply *out);
 
-RPCFunction rpcTilt(&tilt, "tilt");
-//RPCFunction rpcGesture(&gestureUIMode, "gestureUIMode");
-//RPCFunction rpcGesture(&AccCap, "AccCap");
+RPCFunction rpcGetACC(&GetACC, "GetACC");
 BufferedSerial pc(USBTX, USBRX);
 ///////////////////////////////
 // GLOBAL VARIABLES
@@ -121,22 +119,8 @@ void close_mqtt() {
     closed = true;
 }
 
-void display_list()
-{
-    uLCD.locate(0, 0);
-    for (int i = 0; i < 8; i++)
-    {
-        uLCD.color(GREEN);
-        if (i == f_cur)
-            uLCD.color(BLUE);
-        if (i == f_idx)
-            uLCD.color(RED);
-        uLCD.printf("%.1f   \n", f[i]);
-    }
-}
 
-
-void tilt(Arguments *in, Reply *out)
+void GetACC(Arguments *in, Reply *out)
 {
     int16_t pDataXYZ[3] = {0};
     float ang ;
@@ -263,39 +247,7 @@ float gesture(TfLiteTensor *model_input, tflite::ErrorReporter *error_reporter, 
         gesture_index = PredictGesture(interpreter->output(0)->data.f);
         // Clear the buffer next time we read data
         should_clear_buffer = gesture_index < label_num;
-        if (gesture_index < label_num)
-        {
-
-            error_reporter->Report(config.output_message[gesture_index]);
-            //printf("Current index %d\n", gesture_index);
-            // check button
-            if (gesture_index == 0) // up
-            {
-                f_cur = f_cur + 1;
-                if (f_cur > 7)
-                    f_cur = 7;
-                display_list();
-            }
-            if (gesture_index == 1) // down
-            {
-                f_cur = f_cur - 1;
-                if (f_cur < 0)
-                    f_cur = 0;
-                display_list();
-                // ThisThread::sleep_for(10ms);
-            }
-            if (gesture_index == 2) // check
-            {
-                f_idx = f_cur;
-                // freq = f[f_idx];
-                // printf("Current Frequence : %.1f \n\r", freq);
-                display_list();
-                record_flag = 1;
-                result = f[f_cur];
-                // ThisThread::sleep_for(1ms);
-                break;
-            }
-        }
+        if (gesture_index < label_num) error_reporter->Report(config.output_message[gesture_index]);
 
         ThisThread::sleep_for(100ms);
     }

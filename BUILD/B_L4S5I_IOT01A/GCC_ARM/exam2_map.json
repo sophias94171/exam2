@@ -16,9 +16,9 @@
             ".text": 7118,
             ".data": 72,
             ".bss": 2072,
-            ".text-delta": -25606,
-            ".data-delta": -277,
-            ".bss-delta": -64366
+            ".text-delta": 0,
+            ".data-delta": 0,
+            ".bss-delta": 0
         }
     },
     {
@@ -27,9 +27,9 @@
             ".text": 234,
             ".data": 11,
             ".bss": 38,
-            ".text-delta": -38,
-            ".data-delta": -2,
-            ".bss-delta": -2
+            ".text-delta": 0,
+            ".data-delta": 0,
+            ".bss-delta": 0
         }
     },
     {
@@ -38,7 +38,7 @@
             ".text": 48748,
             ".data": 2474,
             ".bss": 89,
-            ".text-delta": -3804,
+            ".text-delta": 0,
             ".data-delta": 0,
             ".bss-delta": 0
         }
@@ -60,8 +60,8 @@
             ".text": 132,
             ".data": 0,
             ".bss": 0,
-            ".text-delta": -2440,
-            ".data-delta": -1,
+            ".text-delta": 0,
+            ".data-delta": 0,
             ".bss-delta": 0
         }
     },
@@ -72,17 +72,6 @@
             ".data": 4,
             ".bss": 28,
             ".text-delta": 0,
-            ".data-delta": 0,
-            ".bss-delta": 0
-        }
-    },
-    {
-        "module": "[lib]/nosys.a",
-        "size": {
-            ".text": 0,
-            ".data": 0,
-            ".bss": 0,
-            ".text-delta": -32,
             ".data-delta": 0,
             ".bss-delta": 0
         }
@@ -101,9 +90,9 @@
     {
         "summary": {
             "static_ram": 19392,
-            "static_ram_delta": -64648,
+            "static_ram_delta": 0,
             "total_flash": 128064,
-            "total_flash_delta": -32200
+            "total_flash_delta": 0
         }
     }
 ]
