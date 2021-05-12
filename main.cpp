@@ -52,9 +52,11 @@ DigitalIn mypin(USER_BUTTON);
 ///////////////////////////////////
 void tilt(Arguments *in, Reply *out);
 void gestureUIMode(Arguments *in, Reply *out);
+void AccCap(Arguments *in, Reply *out);
 
 RPCFunction rpcTilt(&tilt, "tilt");
-RPCFunction rpcGesture(&gestureUIMode, "gestureUIMode");
+//RPCFunction rpcGesture(&gestureUIMode, "gestureUIMode");
+//RPCFunction rpcGesture(&AccCap, "AccCap");
 BufferedSerial pc(USBTX, USBRX);
 ///////////////////////////////
 // GLOBAL VARIABLES
@@ -71,6 +73,7 @@ volatile bool closed = false;
 constexpr int kTensorArenaSize = 60 * 1024;
 uint8_t tensor_arena[kTensorArenaSize];
 const char* topic = "Mbed";
+
 
 
 void messageArrived(MQTT::MessageData& md) {
@@ -140,38 +143,17 @@ void tilt(Arguments *in, Reply *out)
     char buffer[200];
     BSP_ACCELERO_Init();
 
-   printf("Please place the mbed stationary on table.\n");
-   float ang0 = 0;
-   for( int i=0; i < 10; i++) //initialization
-   {
-       led1 = !led1;
-       BSP_ACCELERO_AccGetXYZ(pDataXYZ);
-       
-       ang0 += atan(float(pDataXYZ[0])/(float(pDataXYZ[2])))/3.14159*180;
-       ThisThread::sleep_for(500ms);
-   }
-   printf("threshold angle:%f\n", angle);
-   ang0 /= 10;
-   
-
     for(int i = 1; i<=10;)
     {
         led1 = 1;
         BSP_ACCELERO_AccGetXYZ(pDataXYZ);
-        ang = atan(float(pDataXYZ[0])/(float(pDataXYZ[2])))/3.14159*180-ang0;
-        //printf("accelerometer data: %d, %d, %d \n", pDataXYZ[0], pDataXYZ[1], pDataXYZ[2]);
-        //printf(" angle is %3f\n" ,ang);
-        if(ang > angle){
-            printf(" tilt event #%d: %f \n",i , ang);
-            queue.call(publish_message_2, i, ang);
-            i++;
-        }
+        printf("accelerometer data: %d, %d, %d \n", pDataXYZ[0], pDataXYZ[1], pDataXYZ[2]);
         uLCD.locate(0, 0);
         uLCD.color(BLUE);
-        uLCD.printf("%.2f\n", ang);
+        uLCD.printf("00");
         ThisThread::sleep_for(1000ms);
-        led1 = 0;
     }
+    //queue.call(publish_message_2, i, ang);
     printf("Back to RPC.");
 }
 
@@ -439,6 +421,8 @@ void gestureUIMode(Arguments *in, Reply *out)
     return;
 
 }
+
+
 int setup_wifi(){
     wifi = WiFiInterface::get_default_instance();
     //printf("1\n");
