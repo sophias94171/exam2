@@ -43,12 +43,12 @@ float angle;
 
 Thread thread(osPriorityHigh);
 Thread t;
-EventQueue queue;
+EventQueue queue(32 * EVENTS_EVENT_SIZE);
 
 DigitalOut led1(LED1);
 DigitalOut led2(LED2);
 DigitalOut led3(LED3);
-DigitalIn mypin(USER_BUTTON);
+//DigitalIn mypin(USER_BUTTON);
 //Timeout flipper;//flipper.attach(&flip, 2s);
 ///////////////////////////////////
 void GetACC(Arguments *in, Reply *out);
@@ -62,7 +62,10 @@ WiFiInterface *wifi;
 MQTT::Client<MQTTNetwork, Countdown> *client_ptr;
 MQTTNetwork *mqttNetwork;
 
-InterruptIn btn2(USER_BUTTON);
+InterruptIn btnRecord(USER_BUTTON);
+int16_t pDataXYZ[3] = {0};
+int idR[32] = {0};
+int indexR = 0;
 //InterruptIn btn3(SW3);
 volatile int message_num = 0;
 volatile int arrivedcount = 0;
@@ -120,9 +123,37 @@ void close_mqtt() {
 }
 
 
+void record(void) {
+
+   BSP_ACCELERO_AccGetXYZ(pDataXYZ);
+
+   printf("%d, %d, %d\n", pDataXYZ[0], pDataXYZ[1], pDataXYZ[2]);
+
+}
+
+void stopRecord(void) {
+
+   printf("---stop---\n");
+
+   for (auto &i : idR)
+
+      queue.cancel(i);
+
+}
+
+void startRecord(void) {
+
+   printf("---start---\n");
+
+   idR[indexR++] = queue.call_every(1ms, record);
+
+   indexR = indexR % 32;
+
+}
+
+
 void GetACC(Arguments *in, Reply *out)
 {
-    int16_t pDataXYZ[3] = {0};
     float ang ;
     char buffer[200];
     BSP_ACCELERO_Init();
@@ -134,7 +165,7 @@ void GetACC(Arguments *in, Reply *out)
         t.start(callback(&queue, &EventQueue::dispatch_forever));
         btnRecord.fall(queue.event(startRecord));
         btnRecord.rise(queue.event(stopRecord));
-        
+
         printf("accelerometer data: %d, %d, %d \n", pDataXYZ[0], pDataXYZ[1], pDataXYZ[2]);
         uLCD.locate(0, 0);
         uLCD.color(BLUE);
