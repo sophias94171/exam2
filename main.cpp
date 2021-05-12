@@ -35,11 +35,7 @@
 //////
 uLCD_4DGL uLCD(D1, D0, D2);
 
-int N = 256;
-float f[8] = {20, 25, 30, 35, 40, 45, 50, 55}; //list of threshold angles
-int f_cur = 3;
-int f_idx = 3;
-float angle;
+int index_number;
 
 Thread thread(osPriorityHigh);
 Thread t;
@@ -120,53 +116,6 @@ void close_mqtt() {
     closed = true;
 }
 
-void record(void) {
-
-   int16_t pDataXYZ[3] = {0};
-   BSP_ACCELERO_AccGetXYZ(pDataXYZ);
-
-   printf("%d, %d, %d\n", pDataXYZ[0], pDataXYZ[1], pDataXYZ[2]);
-
-}
-
-
-void startRecord(void) {
-
-   printf("---start---\n");
-
-   idR[indexR++] = queue.call_every(1ms, record);
-
-   indexR = indexR % 32;
-
-}
-
-
-void stopRecord(void) {
-
-   printf("---stop---\n");
-
-   for (auto &i : idR)
-
-      queue.cancel(i);
-
-}
-
-void GetACC(Arguments *in, Reply *out)
-{
-    char buffer[200];
-   printf("Start accelerometer init\n");
-
-   BSP_ACCELERO_Init();
-
-   t.start(callback(&queue, &EventQueue::dispatch_forever));
-
-   btnRecord.fall(queue.event(startRecord));
-
-   btnRecord.rise(queue.event(stopRecord));
-
-}
-
-
 
 int PredictGesture(float *output)
 {
@@ -236,7 +185,7 @@ int PredictGesture(float *output)
     return this_predict;
 }
 
-float gesture(TfLiteTensor *model_input, tflite::ErrorReporter *error_reporter, tflite::MicroInterpreter *interpreter)
+int gesture(TfLiteTensor *model_input, tflite::ErrorReporter *error_reporter, tflite::MicroInterpreter *interpreter)
 {
     float result = 0;
     bool should_clear_buffer = false;
@@ -279,7 +228,7 @@ float gesture(TfLiteTensor *model_input, tflite::ErrorReporter *error_reporter, 
 
         ThisThread::sleep_for(100ms);
     }
-    return result;
+    return gesture_index;
 }
 void gestureUIMode()
 {
@@ -388,9 +337,8 @@ void gestureUIMode()
 
     error_reporter->Report("Set up successful...\n");
 
-    angle = gesture(model_input, error_reporter, interpreter);
+    index_number = gesture(model_input, error_reporter, interpreter);
     
-    //queue.call(publish_message_1, angle);
     return;
 
 }
@@ -447,6 +395,53 @@ int setup_wifi(){
     //printf("7\n");
     return 0;
 }
+
+void record(void) {
+
+   int16_t pDataXYZ[3] = {0};
+   BSP_ACCELERO_AccGetXYZ(pDataXYZ);
+
+   printf("%d, %d, %d\n", pDataXYZ[0], pDataXYZ[1], pDataXYZ[2]);
+
+}
+
+
+void startRecord(void) {
+
+   printf("---start---\n");
+
+   idR[indexR++] = queue.call_every(1ms, record);
+
+   indexR = indexR % 32;
+
+}
+
+
+void stopRecord(void) {
+
+   printf("---stop---\n");
+
+   for (auto &i : idR)
+
+      queue.cancel(i);
+
+}
+
+void GetACC(Arguments *in, Reply *out)
+{
+    char buffer[200];
+   printf("Start accelerometer init\n");
+
+   BSP_ACCELERO_Init();
+
+   t.start(callback(&queue, &EventQueue::dispatch_forever));
+
+   btnRecord.fall(queue.event(startRecord));
+
+   btnRecord.rise(queue.event(stopRecord));
+
+}
+
 
 int main(void)
 {
