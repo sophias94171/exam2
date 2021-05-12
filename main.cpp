@@ -48,9 +48,11 @@ DigitalOut led3(LED3);
 //Timeout flipper;//flipper.attach(&flip, 2s);
 ///////////////////////////////////
 void GetACC(Arguments *in, Reply *out);
-//void gestureUIMode(Arguments *in, Reply *out);
+void gestureUIMode(Arguments *in, Reply *out);
+
 
 RPCFunction rpcGetACC(&GetACC, "GetACC");
+RPCFunction gestureUIMode(&gestureUIMode, "gestureUIMode");
 BufferedSerial pc(USBTX, USBRX);
 ///////////////////////////////
 // GLOBAL VARIABLES
@@ -230,7 +232,7 @@ int gesture(TfLiteTensor *model_input, tflite::ErrorReporter *error_reporter, tf
     }
     return gesture_index;
 }
-void gestureUIMode()
+void gestureUIMode(Arguments *in, Reply *out)
 {
     led3 = 1;
     char buffer[200];
@@ -337,7 +339,7 @@ void gestureUIMode()
 
     error_reporter->Report("Set up successful...\n");
 
-    index_number = gesture(model_input, error_reporter, interpreter);
+    int index_number = gesture(model_input, error_reporter, interpreter);
     
     return;
 
