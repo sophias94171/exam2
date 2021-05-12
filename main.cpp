@@ -42,6 +42,7 @@ int f_idx = 3;
 float angle;
 
 Thread thread(osPriorityHigh);
+Thread t;
 EventQueue queue;
 
 DigitalOut led1(LED1);
@@ -51,8 +52,7 @@ DigitalIn mypin(USER_BUTTON);
 //Timeout flipper;//flipper.attach(&flip, 2s);
 ///////////////////////////////////
 void GetACC(Arguments *in, Reply *out);
-void gestureUIMode(Arguments *in, Reply *out);
-void AccCap(Arguments *in, Reply *out);
+//void gestureUIMode(Arguments *in, Reply *out);
 
 RPCFunction rpcGetACC(&GetACC, "GetACC");
 BufferedSerial pc(USBTX, USBRX);
@@ -126,11 +126,15 @@ void GetACC(Arguments *in, Reply *out)
     float ang ;
     char buffer[200];
     BSP_ACCELERO_Init();
-
+    
     for(int i = 1; i<=10;)
     {
         led1 = 1;
         BSP_ACCELERO_AccGetXYZ(pDataXYZ);
+        t.start(callback(&queue, &EventQueue::dispatch_forever));
+        btnRecord.fall(queue.event(startRecord));
+        btnRecord.rise(queue.event(stopRecord));
+        
         printf("accelerometer data: %d, %d, %d \n", pDataXYZ[0], pDataXYZ[1], pDataXYZ[2]);
         uLCD.locate(0, 0);
         uLCD.color(BLUE);
@@ -140,6 +144,8 @@ void GetACC(Arguments *in, Reply *out)
     //queue.call(publish_message_2, i, ang);
     printf("Back to RPC.");
 }
+
+
 
 int PredictGesture(float *output)
 {
@@ -248,25 +254,22 @@ float gesture(TfLiteTensor *model_input, tflite::ErrorReporter *error_reporter, 
         // Clear the buffer next time we read data
         should_clear_buffer = gesture_index < label_num;
         if (gesture_index < label_num) error_reporter->Report(config.output_message[gesture_index]);
+    
 
         ThisThread::sleep_for(100ms);
     }
     return result;
 }
-void gestureUIMode(Arguments *in, Reply *out)
+void gestureUIMode()
 {
     led3 = 1;
     char buffer[200];
 
-      // Set up logging.
 
     static tflite::MicroErrorReporter micro_error_reporter;
 
     tflite::ErrorReporter *error_reporter = &micro_error_reporter;
 
-    // Map the model into a usable data structure. This doesn't involve any
-
-    // copying or parsing, it's a very lightweight operation.
 
     const tflite::Model *model = tflite::GetModel(g_magic_wand_model_data);
 
@@ -365,11 +368,8 @@ void gestureUIMode(Arguments *in, Reply *out)
     error_reporter->Report("Set up successful...\n");
 
     angle = gesture(model_input, error_reporter, interpreter);
-    sprintf(buffer, "selected angle: %f \n", angle);
-    out->putData(buffer);
-    led3 = 0;
-    printf("Back to RPC.");
-    queue.call(publish_message_1, angle);
+    
+    //queue.call(publish_message_1, angle);
     return;
 
 }
